@@ -25,6 +25,7 @@ public class FilterOperatorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_filter_operator);
         amb();
+        
     }
 
     /**
