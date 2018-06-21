@@ -24,14 +24,16 @@ public class FilterOperatorActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_filter_operator);
-        amb();
-        
+        any();
+
     }
 
     /**
+     * 在一个Publishers集合中镜像出一个首先发射的Publisher，并发射出去
+     * <p>
      * <p></p>
      * <b>NOTE:</b>
-     * 在一个Publishers集合中镜像出一个首先发射的Publisher，并发射出去
+     * （多个Publisher中只选择一个，即最先发射的那个Observable）
      */
     private void amb() {
         Flowable<Integer> a = Flowable.just(1, 2, 3).delay(1000, TimeUnit.MICROSECONDS);
@@ -49,6 +51,30 @@ public class FilterOperatorActivity extends AppCompatActivity {
         composite.add(d);
     }
 
+    /**
+     * 返回一个Single,它发射一个boolen值。所有的发射数据是否满足条件
+     * <em>NOTE:</em>
+     * 只有所有的发射数据都满足条件时，发射true,否则发射false
+     */
+    private void all() {
+        Disposable d = Flowable
+                .just(1, 2, 3)
+                .all(integer -> integer < 3)
+                .subscribe(value -> LogUtils.i("all:" + value));   // all:false
+
+    }
+
+    /**
+     * 返回一个Single,它发射一个boolen值,任意一个item满足条件，发射true
+     * <em>NOTE:</em>
+     * 与all相反，任意一个item满足条件时，发射true,否则发射false
+     */
+    private void any() {
+        Disposable d = Flowable
+                .just(1, 2, 3)
+                .any(integer -> integer < 3)
+                .subscribe(value -> LogUtils.i("any:" + value));   // any:true
+    }
 
     @Override
     protected void onDestroy() {

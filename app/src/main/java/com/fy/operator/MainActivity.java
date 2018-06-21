@@ -7,8 +7,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.fy.operator.item.BlockingActivity;
 import com.fy.operator.item.CreateOperatorActivity;
 import com.fy.operator.item.FilterOperatorActivity;
+import com.fy.operator.item.MergeOperatorActivity;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -34,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
         ButterKnife.bind(this);
     }
 
-    @OnClick(value = {R.id.btn_create, R.id.btn_filter, R.id.btn_merge, R.id.btn_condition, R.id.btn_vary})
+    @OnClick(value = {R.id.btn_create, R.id.btn_filter, R.id.btn_merge, R.id.btn_condition, R.id.btn_vary, R.id.btn_block})
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btn_create:
@@ -44,10 +46,14 @@ public class MainActivity extends AppCompatActivity {
                 gotoActivity(FilterOperatorActivity.class);
                 break;
             case R.id.btn_merge:
+                gotoActivity(MergeOperatorActivity.class);
                 break;
-            case R.id.btn_condition:
+            case R.id.btn_condition: //条件
                 break;
-            case R.id.btn_vary:
+            case R.id.btn_vary: //变换（map）
+                break;
+            case R.id.btn_block:  //阻塞
+                gotoActivity(BlockingActivity.class);
                 break;
             default:
                 break;
@@ -59,4 +65,14 @@ public class MainActivity extends AppCompatActivity {
         Intent i = new Intent(this, cla);
         startActivity(i);
     }
+
+    @Override
+    public void onUserInteraction() {
+        super.onUserInteraction();
+    }
+
+    public RxApplication getApp() {
+        return (RxApplication) this.getApplication();
+    }
+
 }

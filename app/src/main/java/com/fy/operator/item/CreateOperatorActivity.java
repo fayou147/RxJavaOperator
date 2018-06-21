@@ -5,6 +5,7 @@ import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.fy.operator.LogUtils;
 import com.fy.operator.R;
 
 import org.reactivestreams.Publisher;
@@ -26,6 +27,7 @@ import io.reactivex.Flowable;
 import io.reactivex.FlowableEmitter;
 import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.FlowableSubscriber;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiConsumer;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
@@ -516,5 +518,13 @@ public class CreateOperatorActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    private void range() {
+        Disposable d = Flowable.range(0, 10).subscribe(value -> LogUtils.i("value:" + value));
+    }
+
+    private void timer() {
+        Flowable.just(111).timer(1000, TimeUnit.MILLISECONDS).subscribe(value -> LogUtils.i("value:" + value));
     }
 }

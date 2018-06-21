@@ -35,5 +35,8 @@
         android:id="@+id/btn_vary"
         style="@style/BtnText"
         android:text="操作符——变换" />
-
+    <TextView
+        android:id="@+id/btn_block"
+        style="@style/BtnText"
+        android:text="操作符——阻塞" />
 </android.support.v7.widget.LinearLayoutCompat>
