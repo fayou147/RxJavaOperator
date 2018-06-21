@@ -102,7 +102,7 @@ public class BlockingActivity extends AppCompatActivity {
     }
 
     /**
-     * return一个Iterable，在每次跌倒之前阻塞直到Flowable发射了另一个item。
+     * return一个Iterable，在每次迭代之前阻塞直到Flowable发射了另一个item。
      */
     private void blockingNext() {
         PublishProcessor<String> processor = PublishProcessor.create();
