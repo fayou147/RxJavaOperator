@@ -95,7 +95,7 @@ public class CreateOperatorActivity extends AppCompatActivity {
         flowable.subscribe(new Consumer<Integer>() {
             @Override
             public void accept(Integer integer) throws Exception {
-                Log.i(TAG, "accept:" + integer);
+                Log.i(TAG, "accept:" + integer);  //20
             }
         });
     }
