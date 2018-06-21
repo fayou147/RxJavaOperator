@@ -3,8 +3,8 @@ sort out RxJava2  various operators
 
 ##Create
 
-- create
-+ defer 延缓，订阅之后被观察者才创建
+* create
+* defer 延缓，订阅之后被观察者才创建
 * empty
 * error
 * fromArray
