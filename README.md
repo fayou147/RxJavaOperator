@@ -28,7 +28,7 @@ sort out RxJava2  various operators
 ## Merge(聚合)
 
 * zip
-* merge 肯能有交叉
+* merge 可能有交叉
 * concat 串联
 * combineLatest 其中一个Observable发射数据项后，组合所有Observable发射他们的最后一个数据项
 
