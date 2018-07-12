@@ -15,6 +15,7 @@ import org.reactivestreams.Subscription;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -31,6 +32,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiConsumer;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.schedulers.Timed;
 
 public class CreateOperatorActivity extends AppCompatActivity {
     private static final String TAG = "CreateOperatorActivity";
@@ -40,7 +42,7 @@ public class CreateOperatorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_operator);
 //        create();
-        intervalRange();
+        timeInterval();
     }
 
     private void create() {
@@ -457,6 +459,9 @@ public class CreateOperatorActivity extends AppCompatActivity {
     }
 
     /**
+     * 在指定的延迟后发出item，并在其后的每个period递增数字
+     * <em>NOTE:</em>与timer区别timer只发射一个item,然后就完成
+     *
      * @param initialDelay 发射第一个值等待的延迟时间
      * @param period       序列数组发射的时间间隔
      */
@@ -472,7 +477,7 @@ public class CreateOperatorActivity extends AppCompatActivity {
 
             @Override
             public void onNext(Long aLong) {
-                Log.i(TAG, "interval':" + aLong);
+                Log.i(TAG, "interval':" + aLong);  //1,2,3,4,5...
                 s.request(1);
             }
 
@@ -524,7 +529,135 @@ public class CreateOperatorActivity extends AppCompatActivity {
         Disposable d = Flowable.range(0, 10).subscribe(value -> LogUtils.i("value:" + value));
     }
 
+    /**
+     * 在指定的延迟后发出item,然后completes
+     */
     private void timer() {
-        Flowable.just(111).timer(1000, TimeUnit.MILLISECONDS).subscribe(value -> LogUtils.i("value:" + value));
+        Flowable.timer(1000, TimeUnit.MILLISECONDS).subscribe(value -> LogUtils.i("value:" + value));
+    }
+
+    /**
+     * 记住Flowable发射的数据序列并发射相同的数据序列给后续的订阅者
+     */
+    private void cache() {
+        Flowable<String> cache = Flowable.create(emitter -> {
+            emitter.onNext("one");
+            emitter.onNext("two");
+            emitter.onNext("three");
+            emitter.onComplete();
+        }, BackpressureStrategy.DROP);
+        final CountDownLatch latch = new CountDownLatch(2);
+        Disposable d1 = cache.subscribe(value -> {
+            LogUtils.e(
+                    "1cache" + value);
+            latch.countDown();
+        });
+        Disposable d2 = cache.subscribe(value -> {
+            LogUtils.e(
+                    "2cache" + value);
+            latch.countDown();
+        });
+    }
+
+
+    private void forEach() {
+        Flowable.range(1, 20).forEach(value -> LogUtils.i("value:" + value));
+    }
+
+    Subscription subOnTerminateDetach;
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (subOnTerminateDetach != null)
+            subOnTerminateDetach.cancel();
+    }
+
+    /**
+     * 如果序列终止或下游取消，则清除对上游生产者和下游订阅者的引用。
+     * NOTE：onTerminateDetach操作符要和subscription.cancel() 结合使用
+     * <p>
+     * 解决内存泄漏问题，如果没有onTerminateDetach，activity返回后还会一直发射数据，而在#onDestroy()中取消订阅，
+     * onTerminateDetach操作符会释放引用
+     */
+    private void onTerminateDetach() {
+
+        Flowable
+                .interval(1, TimeUnit.SECONDS)
+                .onTerminateDetach()
+                .subscribe(new Subscriber<Long>() {
+                    @Override
+                    public void onSubscribe(Subscription s) {
+                        subOnTerminateDetach = s;
+                        s.request(1000);
+                    }
+
+                    @Override
+                    public void onNext(Long aLong) {
+                        LogUtils.e("onTerminateDetach:" + aLong);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+    /**
+     * 并行。
+     * 通过创建多个rails并行化流程并以循环方式将上游item发送给rails
+     */
+    private void parallel() {
+        Flowable
+                .range(1, 100)
+                .parallel()
+                .runOn(Schedulers.computation())
+                .map(inter -> "str:" + inter)
+                .sequential()
+                .subscribe(new Subscriber<String>() {
+                    @Override
+                    public void onSubscribe(Subscription s) {
+                        s.request(100);
+                    }
+
+                    @Override
+                    public void onNext(String s) {
+                        LogUtils.e("parallel:" + s);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+    /**
+     * 返回发射的时间间隔
+     */
+    private void timeInterval() {
+        Disposable d = Flowable.intervalRange(0, 10, 0, 1, TimeUnit.SECONDS)
+                .timeInterval(TimeUnit.SECONDS)
+                .subscribe(new Consumer<Timed<Long>>() {
+                    @Override
+                    public void accept(Timed<Long> integerTimed) throws Exception {
+                        print(integerTimed.toString());  //Timed[time=1, unit=SECONDS, value=xxx]  time->period发射的第一个数据间隔为0，value发射在item
+                    }
+                });
+    }
+
+    private <T> void print(T t) {
+        LogUtils.e("#" + t.getClass().getSimpleName() + ":" + t);
     }
 }

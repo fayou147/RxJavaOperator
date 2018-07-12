@@ -1,21 +1,23 @@
 package com.fy.operator.item;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.app.AppCompatActivity;
 
 import com.fy.operator.LogUtils;
 import com.fy.operator.R;
 
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Flowable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
+import io.reactivex.functions.BiPredicate;
+import io.reactivex.schedulers.Schedulers;
 
 public class FilterOperatorActivity extends AppCompatActivity {
     private CompositeDisposable composite = new CompositeDisposable();
@@ -24,7 +26,7 @@ public class FilterOperatorActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_filter_operator);
-        any();
+        timeout();
 
     }
 
@@ -74,11 +76,99 @@ public class FilterOperatorActivity extends AppCompatActivity {
                 .just(1, 2, 3)
                 .any(integer -> integer < 3)
                 .subscribe(value -> LogUtils.i("any:" + value));   // any:true
+        composite.add(d);
+    }
+
+    /**
+     * 去重
+     */
+    private void distinct() {
+        Disposable d = Flowable.just("a", "b", "c", "c", "c", "b", "b", "a", "e")
+                .distinct()
+                .subscribe(value -> LogUtils.i("distinct:" + value)); //a,b,c,e
+    }
+
+    /**
+     * 它只判定一个数据和它的直接前驱是否是不同的(相邻两个数据是否一样)
+     */
+    private void distinctUntilChanged() {
+        Disposable d = Flowable.just("a", "b", "c", "c", "c", "b", "b", "a", "e")
+                .distinctUntilChanged(new BiPredicate<String, String>() {
+                    @Override
+                    public boolean test(String s, String s2) throws Exception {
+                        return s.equals(s2);
+                    }
+                })
+                .subscribe(value -> LogUtils.w("distinctUntilChanged:" + value)); //a,b,c,b,a,e
+        composite.add(d);
+    }
+
+    /**
+     * 返回满足过滤条件的数据
+     */
+    private void filter() {
+        Disposable d = Flowable.range(1, Flowable.bufferSize() * 2)
+                .filter(integer -> integer > 100)
+                .subscribe(value -> LogUtils.i("filter:" + value));
+    }
+
+    /**
+     * 限制上游项目的数量和从上游请求的总下游请求量，防止上游创建多余项目。
+     */
+    private void limit() {
+        Flowable
+                .range(1, 100)
+                .observeOn(Schedulers.computation())
+                .limit(5)
+                .subscribe(new Subscriber<Integer>() {
+                    @Override
+                    public void onSubscribe(Subscription s) {
+                        s.request(10);
+                    }
+
+                    @Override
+                    public void onNext(Integer integer) {
+                        LogUtils.e("limit:" + integer);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        LogUtils.e("onComplete:");
+                    }
+                });
+    }
+
+    /**
+     * 跳过开始的N项数据,发射剩余的
+     */
+    private void skip() {
+        Disposable d = Flowable.range(1, 10)
+                .skip(5)
+                .subscribe(this::print);  //6，7，8，9，10
+    }
+
+    /**
+     * 如果超过了规定的超时时间，会抛出TimeoutException或者抛出指定的Publisher
+     */
+    private void timeout() {
+        Disposable d = Flowable.intervalRange(1, 10, 1000, 1500, TimeUnit.MILLISECONDS)
+//                .timeout(1000, TimeUnit.MILLISECONDS, Flowable.just(1000l))
+                .timeout(1000, TimeUnit.MILLISECONDS)
+                .subscribe(this::print, this::print);  //不发射任何item,直接抛出异常
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         composite.dispose();
+    }
+
+    private <T> void print(T t) {
+        LogUtils.e("#" + t.getClass().getSimpleName() + ":" + t);
     }
 }

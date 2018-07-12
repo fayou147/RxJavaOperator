@@ -21,6 +21,8 @@
         <activity android:name=".item.FilterOperatorActivity" />
         <activity android:name=".item.MergeOperatorActivity" />
         <activity android:name=".item.BlockingActivity" />
+        <activity android:name=".item.VaryActivity" />
+        <activity android:name=".item.ConditionActivity"></activity>
     </application>
 
 </manifest>

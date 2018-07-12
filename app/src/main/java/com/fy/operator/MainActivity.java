@@ -8,9 +8,11 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.fy.operator.item.BlockingActivity;
+import com.fy.operator.item.ConditionActivity;
 import com.fy.operator.item.CreateOperatorActivity;
 import com.fy.operator.item.FilterOperatorActivity;
 import com.fy.operator.item.MergeOperatorActivity;
+import com.fy.operator.item.VaryActivity;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -49,8 +51,10 @@ public class MainActivity extends AppCompatActivity {
                 gotoActivity(MergeOperatorActivity.class);
                 break;
             case R.id.btn_condition: //条件
+                gotoActivity(ConditionActivity.class);
                 break;
             case R.id.btn_vary: //变换（map）
+                gotoActivity(VaryActivity.class);
                 break;
             case R.id.btn_block:  //阻塞
                 gotoActivity(BlockingActivity.class);
